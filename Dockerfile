@@ -4,7 +4,7 @@ ARG MR_LICENSE
 
 WORKDIR /data
 
-COPY [ "packages/new-package" ]
+COPY [ "packages/new-package", "packages/new-package" ]
 COPY /conf/overrides/override.properties conf/overrides/
 
 ENV MR_LICENSE=$MR_LICENSE
