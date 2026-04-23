@@ -1,33 +1,28 @@
 version: 0.2
 
-env:
-  variables:
-    AWS_REGION: "us-east-1"
-    ACCOUNT_ID: "245035153970"
-    REPO_URI: "245035153970.dkr.ecr.us-east-1.amazonaws.com/dev/martini-runtime-docker"
-
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - export MARTINI_VERSION=$(aws ssm get-parameter --name "$BUILD_IMAGE_PARAMETER" --query "Parameter.Value" --output text 2>/dev/null || echo "")
+
+      - "missing=0; for var in BUILD_IMAGE_PARAMETER ECR_REPO_URI; do if [ -z \"${!var}\" ] || [ \"${!var}\" = \"null\" ]; then echo \"ERROR: $var is missing or empty\"; missing=1; fi; done; if [ \"$missing\" = \"1\" ]; then exit 1; fi"
+
+      - aws ecr get-login-password | docker login --username AWS --password-stdin "$ECR_REPO_URI"
+
+
   build:
     commands:
-      - echo Building Docker image...
-      - docker build -t $REPO_URI:$IMAGE_TAG .
-      - docker tag $REPO_URI:$IMAGE_TAG $REPO_URI:latest
+      - echo "Building Docker image for Martini version ${MARTINI_VERSION}..."
+      - docker build -f docker/Dockerfile --build-arg MARTINI_VERSION="$MARTINI_VERSION" -t mr:"$MARTINI_VERSION" .
+      - echo "Tagging image..."
+      - docker tag mr:"$MARTINI_VERSION" "$ECR_REPO_URI:$MARTINI_VERSION"
+
   post_build:
     commands:
-      - echo Pushing image to ECR...
-      - docker push $REPO_URI:$IMAGE_TAG
-      - docker push $REPO_URI:latest
-      - echo Writing image definitions...
-      - printf '[{"name":"python-app","imageUri":"%s"}]' $REPO_URI:$IMAGE_TAG > imagedefinitions.json
+      - echo "Pushing image to ECR..."
+      - docker push "$ECR_REPO_URI:$MARTINI_VERSION"
 
 artifacts:
-  files: imagedefinitions.json
-
-cache:
-  paths:
-    - '/root/.cache/pip'
+  files:
+    - '**/*'
+  discard-paths: true
