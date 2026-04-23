@@ -22,7 +22,7 @@ phases:
       - echo "Pushing image to ECR..."
       - docker push "$ECR_REPO_URI:$MARTINI_VERSION"
       - echo Writing image definitions file...
-      - printf '[{"name":"hello-world","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"martini-runtime-docker","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 
 artifacts:
   files:
