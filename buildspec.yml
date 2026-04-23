@@ -7,7 +7,7 @@ phases:
 
       - "missing=0; for var in BUILD_IMAGE_PARAMETER ECR_REPO_URI; do if [ -z \"${!var}\" ] || [ \"${!var}\" = \"null\" ]; then echo \"ERROR: $var is missing or empty\"; missing=1; fi; done; if [ \"$missing\" = \"1\" ]; then exit 1; fi"
 
-      - aws ecr get-login-password | docker login --username AWS --password-stdin "$ECR_REPO_URI"
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin "$ECR_REPO_URI"
 
 
   build:
@@ -21,8 +21,11 @@ phases:
     commands:
       - echo "Pushing image to ECR..."
       - docker push "$ECR_REPO_URI:$MARTINI_VERSION"
+      - echo Writing image definitions file...
+      - printf '[{"name":"hello-world","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 
 artifacts:
   files:
     - '**/*'
+    - imagedefinitions.json
   discard-paths: true
