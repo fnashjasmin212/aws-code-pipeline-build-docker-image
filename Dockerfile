@@ -1,14 +1,14 @@
-# Use official Python base image
-FROM python:3.10-slim
+FROM lontiplatform/martini-server-runtime:latest
 
-# Set working directory
-WORKDIR /app
+ARG MR_LICENSE
 
-# Copy app files
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /data
 
-COPY . .
+COPY [ "packages/new-package" ]
+COPY /conf/overrides/override.properties conf/overrides/
 
-# Run the application
-CMD ["python", "app.py"]
+ENV MR_LICENSE=$MR_LICENSE
+
+EXPOSE 9090
+
+ENTRYPOINT ["sh", "/data/bin/toro-martini"]
