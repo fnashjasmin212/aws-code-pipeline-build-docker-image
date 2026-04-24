@@ -3,6 +3,8 @@ version: 0.2
 env:
   secrets-manager:
     MARTINI_ACCESS_TOKEN: MARTINI_ACCESS_TOKEN
+    DOCKERHUB_USERNAME: dockerhub-credentials:username
+    DOCKERHUB_TOKEN: dockerhub-credentials:token
 
 phases:
   pre_build:
