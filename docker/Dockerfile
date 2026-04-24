@@ -10,4 +10,5 @@ ENV MR_LICENSE=$MR_LICENSE
 
 EXPOSE 9090
 
+
 ENTRYPOINT ["sh", "/data/bin/toro-martini"]
