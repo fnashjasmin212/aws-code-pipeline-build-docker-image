@@ -23,7 +23,6 @@ phases:
           fi
         done
         if [ "$missing" = "1" ]; then exit 1; fi
-      - docker login --username "$DOCKERHUB_USERNAME" --password-stdin
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin "$ECR_REPO_URI"
   build:
     commands:
