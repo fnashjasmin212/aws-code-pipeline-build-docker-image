@@ -30,7 +30,7 @@ phases:
   build:
     commands:
       - echo "Building Docker image for Martini Runtime version ${MARTINI_VERSION}..."
-      - docker build -f docker/Dockerfile --build-arg MARTINI_VERSION="$MARTINI_VERSION" --build-arg MR_LICENSE="$MR_LICENSE" -t "$ECR_REPO_URI:mytag:latest" .
+      - docker build -f docker/Dockerfile --build-arg MARTINI_VERSION="$MARTINI_VERSION" --build-arg MR_LICENSE="$MR_LICENSE" -t "$ECR_REPO_URI:$MARTINI_VERSION" -t "mytag:latest" .
   post_build:
     commands:
       - echo "Pushing image to ECR..."
