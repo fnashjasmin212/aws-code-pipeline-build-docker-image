@@ -1,0 +1,40 @@
+# ------------------------
+# Name: Build Docker Image
+# Description: Build Docker Image using AWS Code Pipelines and CodeBuild
+# ------------------------
+version: 0.2
+env:
+  variables:
+    MARTINI_VERSION: latest
+    AWS_DEFAULT_REGION: us-east-1
+    MR_LICENSE: MR_LICENSE
+  secrets-manager:
+    DOCKERHUB_USERNAME: dockerhub-credentials:username
+    DOCKERHUB_TOKEN: dockerhub-credentials:token
+phases:
+  pre_build:
+    commands:
+      - |-
+        missing=0
+        for var in MARTINI_VERSION ECR_REPO_URI MR_LICENSE; do
+          if [ -z "${!var}" ]; then
+            echo "ERROR: $var is missing"
+            missing=1
+          fi
+        done
+        if [ "$missing" = "1" ]; then exit 1; fi
+      - echo "Logging in to Docker Hub..."
+      - echo "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+      - echo "Logging in to ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin "$ECR_REPO_URI"
+  build:
+    commands:
+      - echo "Building Docker image for Martini Runtime version ${MARTINI_VERSION}..."
+      - docker build -f docker/Dockerfile --build-arg MARTINI_VERSION="$MARTINI_VERSION" --build-arg MR_LICENSE="$MR_LICENSE" -t "$ECR_REPO_URI:$MARTINI_VERSION" -t "mytag:latest" .
+  post_build:
+    commands:
+      - echo "Pushing image to ECR..."
+      - docker push "$ECR_REPO_URI:$MARTINI_VERSION"
+artifacts:
+  files:
+    - '**/*'
